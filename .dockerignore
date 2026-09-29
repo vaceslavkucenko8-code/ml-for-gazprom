@@ -1,0 +1,10 @@
+*
+!requirements.txt
+!src/
+!src/**
+!models/
+!models/translation-en-ru/
+!models/translation-en-ru/**
+!artifacts/
+!artifacts/source_ranker.json
+**/__pycache__

@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Технологические сигналы</title>
+<style>
+*{box-sizing:border-box}
+body{font:15px/1.6 system-ui,sans-serif;background:#f0f3f8;color:#1b2942;max-width:1180px;margin:0 auto;padding:20px}
+h1{font-size:28px;margin:0 0 4px}
+h2{font-size:18px;margin:18px 0 10px}
+h3{font-size:15px;margin:10px 0 4px}
+p.subtitle{color:#546e8a;margin:0 0 20px;font-size:14px}
+section{background:#fff;padding:20px 24px;border-radius:12px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+label{display:block;margin:10px 0 4px;font-size:13px;font-weight:600;color:#334155}
+input,select,textarea{width:100%;padding:9px 11px;font:inherit;border:1px solid #c8d4e3;border-radius:6px;outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:#3b82f6}
+button,.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:0;border-radius:6px;font:inherit;font-size:14px;cursor:pointer;transition:background .15s;text-decoration:none}
+.btn-primary{background:#2563eb;color:#fff}.btn-primary:hover{background:#1d4ed8}
+.btn-secondary{background:#e8eef8;color:#1e40af}.btn-secondary:hover{background:#dbeafe}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-link{background:none;color:#2563eb;padding:2px 0;font-size:13px}
+#message{white-space:pre-wrap;color:#b45309;background:#fef9c3;border-radius:6px;padding:8px 12px;margin:8px 0;display:none}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* Run history */
+.run-card{border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:border .15s}
+.run-card:hover{border-color:#93c5fd}
+.run-card.active{border-color:#2563eb;background:#eff6ff}
+.run-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px}
+.run-status{font-size:12px;padding:2px 8px;border-radius:10px;font-weight:600}
+.status-done{background:#dcfce7;color:#166534}
+.status-running,.status-queued{background:#fef9c3;color:#854d0e}
+.status-failed{background:#fee2e2;color:#991b1b}
+/* Results panel */
+#results-panel{display:none}
+.results-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.stat-chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px}
+.chip-weak{background:#dcfce7;color:#166534}
+.chip-review{background:#fef9c3;color:#854d0e}
+.chip-mature{background:#fee2e2;color:#991b1b}
+.chip-count{background:#e0e7ff;color:#3730a3}
+/* Candidate list */
+.cand-list{display:flex;flex-direction:column;gap:8px}
+.cand-item{border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;cursor:pointer;transition:all .15s}
+.cand-item:hover{border-color:#93c5fd;background:#f8faff}
+.cand-item.selected{border-color:#2563eb;background:#eff6ff}
+.cand-header{display:flex;align-items:flex-start;gap:10px}
+.decision-badge{flex-shrink:0;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;margin-top:2px}
+.badge-weak{background:#dcfce7;color:#166534}
+.badge-review{background:#fef9c3;color:#854d0e}
+.badge-mature{background:#fee2e2;color:#991b1b}
+.cand-name{font-weight:600;font-size:14px;line-height:1.4;flex:1}
+.cand-meta{font-size:12px;color:#64748b;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap}
+.score-bar-wrap{margin:6px 0 2px;display:flex;align-items:center;gap:8px}
+.score-bar{height:5px;background:#e2e8f0;border-radius:3px;flex:1;overflow:hidden}
+.score-fill{height:100%;border-radius:3px;background:#3b82f6}
+.score-fill.fill-weak{background:#22c55e}
+.score-fill.fill-review{background:#f59e0b}
+.score-fill.fill-mature{background:#ef4444}
+.score-label{font-size:11px;color:#64748b;flex-shrink:0;width:36px;text-align:right}
+.flags-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.flag{font-size:11px;padding:2px 7px;border-radius:8px}
+.flag-yes{background:#dcfce7;color:#166534}
+.flag-no{background:#f1f5f9;color:#94a3b8}
+/* Detail card */
+#detail-panel{display:none;margin-top:16px;border-top:1px solid #e2e8f0;padding-top:16px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.detail-section{margin-bottom:14px}
+.detail-section h3{font-size:13px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.claim-item{background:#f8faff;border-left:3px solid #3b82f6;padding:8px 10px;border-radius:0 6px 6px 0;margin:6px 0;font-size:13px}
+.claim-item.claim-mature{border-color:#ef4444;background:#fff5f5}
+.claim-feature{font-size:11px;font-weight:700;color:#2563eb;margin-bottom:3px}
+.claim-feature.feat-mature{color:#dc2626}
+.claim-quote{color:#334155;line-height:1.5}
+.claim-source{font-size:11px;color:#94a3b8;margin-top:3px}
+/* Sources table */
+.sources-table{width:100%;border-collapse:collapse;font-size:12px}
+.sources-table th{text-align:left;padding:5px 8px;background:#f1f5f9;font-weight:600;color:#475569;border-bottom:1px solid #e2e8f0}
+.sources-table td{padding:6px 8px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+.sources-table tr:last-child td{border:none}
+.trust-high{color:#166534;font-weight:600}
+.trust-medium{color:#854d0e;font-weight:600}
+.trust-low{color:#991b1b;font-weight:600}
+.trust-unknown{color:#64748b}
+.src-link{color:#2563eb;text-decoration:none;font-weight:600;font-size:12px}
+.src-link:hover{text-decoration:underline}
+.missing-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.missing-tag{font-size:11px;padding:3px 8px;background:#fff7ed;color:#9a3412;border-radius:6px;border:1px solid #fed7aa}
+/* Evidence review */
+blockquote{border-left:3px solid #93c5fd;padding-left:12px;margin:8px 0;color:#334155;font-size:13px}
+details{margin:10px 0}
+details summary{cursor:pointer;font-weight:600;font-size:13px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f8fafc;padding:10px;border-radius:6px;font-size:12px;max-height:300px;overflow-y:auto}
+.empty-state{text-align:center;padding:32px;color:#94a3b8}
+.empty-state .icon{font-size:36px;margin-bottom:8px}
+.alert{padding:10px 14px;border-radius:6px;font-size:13px;margin:8px 0}
+.alert-warn{background:#fef9c3;color:#713f12;border:1px solid #fde68a}
+.alert-info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+</style>
+<h1>Технологические сигналы</h1>
+<p class="subtitle">Поиск в открытых источниках · автоматический отбор · проверяемые цитаты</p>
+
+<section>
+  <h2>Новый поиск</h2>
+  <div class="row2">
+    <label>Технологическая тема (на русском)
+      <input id="query" required minlength="3" maxlength="300" placeholder="Квантовые сенсоры для навигации">
+    </label>
+    <label>Формулировка для зарубежных источников <span style="font-weight:400;color:#94a3b8">(необязательно)</span>
+      <input id="search-query" maxlength="300" placeholder="quantum navigation sensors">
+    </label>
+  </div>
+  <label style="max-width:220px">Оценить по состоянию на
+    <input id="as-of" type="date" required>
+  </label>
+  <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+    <button class="btn btn-primary" id="search-btn">Найти кандидатов</button>
+    <span style="font-size:12px;color:#94a3b8">Источники: arXiv · Crossref · Hacker News</span>
+  </div>
+  <div class="alert alert-info" style="margin-top:10px;font-size:12px">Автоматическая оценка использует правила по доказательствам из источников. Окончательный отбор требует подтверждённых признаков. Скоринг — эвристический балл, не вероятность.</div>
+</section>
+
+<div id="message" role="status"></div>
+
+<section id="results-panel">
+  <div class="results-header">
+    <div>
+      <h2 id="results-title" style="margin:0">Результаты</h2>
+      <div id="results-query" style="font-size:13px;color:#64748b;margin-top:2px"></div>
+    </div>
+    <div class="stat-chips" id="stat-chips"></div>
+  </div>
+  <div id="results-error" style="display:none"></div>
+  <div style="display:flex;gap:16px;align-items:flex-start">
+    <div style="flex:1;min-width:0" id="cand-list-wrap">
+      <div class="cand-list" id="cand-list"></div>
+    </div>
+    <div style="width:480px;flex-shrink:0" id="detail-panel-wrap">
+      <div id="detail-panel"></div>
+    </div>
+  </div>
+  <div style="margin-top:12px;text-align:right">
+    <a id="report-link" class="btn btn-secondary btn-sm" target="_blank" rel="noopener" style="display:none">Полный отчёт →</a>
+  </div>
+</section>
+
+<section>
+  <h2>История запросов</h2>
+  <div id="runs-list"><div class="empty-state"><div class="icon">🔍</div>Запусков пока нет</div></div>
+</section>
+
+<section id="review-section" style="display:none">
+  <h2>Ручная проверка доказательств</h2>
+  <p style="font-size:13px;color:#546e8a">Сверьте цитату с источником и определите, что она доказывает. Не подтверждайте ограниченность внедрения только по отсутствию сведений о продажах.</p>
+  <form id="review-form">
+    <div class="row2">
+      <label>Кандидат<select id="rev-candidate"></select></label>
+      <label>Цитата<select id="rev-evidence"></select></label>
+    </div>
+    <blockquote id="rev-quote">Выберите цитату</blockquote>
+    <div id="rev-sources"></div>
+    <div class="row2">
+      <label>Признак
+        <select id="rev-feature">
+          <option value="early_stage">Ранняя стадия</option>
+          <option value="limited_adoption">Ограниченное внедрение</option>
+          <option value="emerging_activity">Новые события развития</option>
+          <option value="relevance">Связь с запросом</option>
+          <option value="mass_adoption">Массовое внедрение</option>
+          <option value="established_market">Сформированный рынок</option>
+          <option value="industry_standard">Отраслевой стандарт</option>
+          <option value="hype_only">Информационный шум</option>
+          <option value="irrelevant">Не соответствует запросу</option>
+        </select>
+      </label>
+      <label>Дата подтверждённого события <input id="rev-observed" type="date" required></label>
+    </div>
+    <label>Кто проверил <input id="rev-reviewer" required maxlength="120" placeholder="Имя проверяющего"></label>
+    <label>Почему цитата подтверждает признак <textarea id="rev-rationale" required rows="2" placeholder="Обоснование применимости к данной технологии"></textarea></label>
+    <label style="flex-direction:row;align-items:flex-start;gap:8px;display:flex">
+      <input type="checkbox" id="rev-confirmed" required style="width:auto;margin-top:3px">
+      <span style="font-size:13px">Смысл и применимость к этому кандидату проверены; это состоявшийся факт, а не обещание.</span>
+    </label>
+    <button class="btn btn-primary" style="margin-top:10px">Сохранить проверку и пересчитать</button>
+  </form>
+</section>
+
+<script>
+const TOKEN = '__TOKEN__';
+let currentRunId = null;
+let currentCandidates = [];
+let currentAssessments = [];
+let selectedCandId = null;
+
+const el = id => document.getElementById(id);
+function showMsg(txt, type='warn') {
+  const m = el('message');
+  m.textContent = txt;
+  m.style.display = txt ? 'block' : 'none';
+  m.style.background = type === 'warn' ? '#fef9c3' : '#dcfce7';
+  m.style.color = type === 'warn' ? '#713f12' : '#166534';
+}
+
+async function api(path, body) {
+  const res = await fetch(path, body ? {method:'POST', headers:{'Content-Type':'application/json','X-Local-Token':TOKEN}, body:JSON.stringify(body)} : {});
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Ошибка запроса');
+  return data;
+}
+
+// ── Labels ──────────────────────────────────────────────────────────────────
+const DECISION_LABEL = {likely_weak:'Слабый сигнал', likely_mature:'Зрелая технология', needs_review:'Нужна проверка'};
+const DECISION_CLASS = {likely_weak:'badge-weak', likely_mature:'badge-mature', needs_review:'badge-review'};
+const SCORE_CLASS = {likely_weak:'fill-weak', likely_mature:'fill-mature', needs_review:'fill-review'};
+const FEATURE_LABEL = {
+  early_stage:'Ранняя стадия', limited_adoption:'Ограниченное внедрение',
+  emerging_activity:'Новые события', relevance:'Релевантность',
+  mass_adoption:'Массовое внедрение', established_market:'Сформированный рынок',
+  industry_standard:'Отраслевой стандарт', hype_only:'Информационный шум', irrelevant:'Не по теме'
+};
+const SOURCE_TYPE_LABEL = {
+  research:'Научная публикация', academic_paper:'Научная публикация',
+  official:'Официальный', regulator:'Регулятор', university:'Университет',
+  patent:'Патент', professional_media:'Отраслевые медиа',
+  press_release:'Пресс-релиз', blog:'Блог', aggregator:'Агрегатор', unknown:'Тип не определён'
+};
+const TRUST_CLASS = {high:'trust-high', medium:'trust-medium', low:'trust-low', unknown:'trust-unknown'};
+const TRUST_LABEL = {high:'Высокое', medium:'Среднее', low:'Низкое', unknown:'Не определено'};
+const REASON_LABEL = {
+  insufficient_explicit_evidence:'Недостаточно явных доказательств',
+  explicit_maturity_claim:'Явные признаки зрелости',
+  explicit_early_and_limited_scope_claims:'Ранняя стадия + ограниченный масштаб',
+  below_threshold:'Ниже порога', hype_or_irrelevant:'Шум или нерелевантно',
+  mass_adoption_detected:'Обнаружено массовое внедрение',
+  industry_standard_detected:'Отраслевой стандарт'
+};
+const POSITIVE_FEATURES = new Set(['early_stage','limited_adoption','emerging_activity','relevance']);
+
+function decisionLabel(d) { return DECISION_LABEL[d] || d; }
+function featureLabel(f) { return FEATURE_LABEL[f] || f; }
+function sourceTypeLabel(t) { return SOURCE_TYPE_LABEL[t] || t; }
+function trustLabel(t) { return TRUST_LABEL[t] || t; }
+function reasonLabel(r) { return REASON_LABEL[r] || r; }
+
+function langLabel(l) {
+  const map = {en:'EN',ru:'RU',de:'DE',fr:'FR',zh:'ZH',ja:'JA',ko:'KO'};
+  return (map[l] || (l||'?').toUpperCase()).substring(0,3);
+}
+
+// ── Render helpers ───────────────────────────────────────────────────────────
+function scoreBarHTML(score, decision) {
+  const pct = Math.min(100, Math.max(0, score || 0));
+  const cls = SCORE_CLASS[decision] || 'fill-review';
+  return `<div class="score-bar-wrap">
+    <div class="score-bar"><div class="score-fill ${cls}" style="width:${pct}%"></div></div>
+    <span class="score-label">${pct}/100</span>
+  </div>`;
+}
+
+function flagsHTML(flags, missing) {
+  const missingSet = new Set(missing || []);
+  const show = ['early_stage','limited_adoption'];
+  return show.map(f => {
+    const on = flags && flags[f];
+    return `<span class="flag ${on ? 'flag-yes':'flag-no'}">${on?'✓':'✗'} ${featureLabel(f)}</span>`;
+  }).join('');
+}
+
+function renderCandidateItem(cand, assessment, idx) {
+  const dec = assessment?.decision || 'needs_review';
+  const score = assessment?.score ?? 0;
+  const flags = assessment?.flags || {};
+  const missing = assessment?.missing_features || [];
+  const name = cand.name_ru || cand.candidate_id;
+  const domain = cand.participant2_candidate?.domain || '';
+  const srcCount = (cand.sources||[]).length;
+  const div = document.createElement('div');
+  div.className = 'cand-item';
+  div.dataset.cid = cand.candidate_id;
+  div.innerHTML = `
+    <div class="cand-header">
+      <span class="decision-badge ${DECISION_CLASS[dec]||'badge-review'}">${decisionLabel(dec)}</span>
+      <span class="cand-name">${esc(name)}</span>
+    </div>
+    <div class="cand-meta">
+      ${domain ? `<span>📁 ${esc(domain)}</span>` : ''}
+      <span>📄 ${srcCount} источн.</span>
+    </div>
+    ${scoreBarHTML(score, dec)}
+    <div class="flags-row">${flagsHTML(flags, missing)}</div>`;
+  div.addEventListener('click', () => showDetail(cand, assessment));
+  return div;
+}
+
+function renderDetail(cand, assessment) {
+  const dec = assessment?.decision || 'needs_review';
+  const score = assessment?.score ?? 0;
+  const scoreKind = assessment?.score_kind || '';
+  const flags = assessment?.flags || {};
+  const missing = assessment?.missing_features || [];
+  const claims = assessment?.claims || [];
+  const reason = assessment?.reason || '';
+  const p2 = cand.participant2_candidate || {};
+  const sources = cand.sources || [];
+
+  const scoreNote = scoreKind.includes('not_probability')
+    ? 'Эвристический балл (0–100). Отражает число подтверждённых признаков. Не является вероятностью.'
+    : 'Сумма весов доказательств (0–100). Не является вероятностью.';
+
+  // Claims — show positive first, then negative
+  const posClaims = claims.filter(c => POSITIVE_FEATURES.has(c.feature));
+  const negClaims = claims.filter(c => !POSITIVE_FEATURES.has(c.feature));
+  const renderClaim = (c, neg) => {
+    const cls = neg ? 'claim-item claim-mature' : 'claim-item';
+    const fcls = neg ? 'claim-feature feat-mature' : 'claim-feature';
+    const src = sources.find(s => s.source_id === c.source_id);
+    const srcTitle = src ? src.title_original : c.source_id;
+    return `<div class="${cls}">
+      <div class="${fcls}">${featureLabel(c.feature)} ${c.human_reviewed ? '✓ проверено' : '(автоматически)'}</div>
+      <div class="claim-quote">«${esc(c.quote.slice(0,280))}${c.quote.length>280?'…':''}»</div>
+      <div class="claim-source">${esc(srcTitle.slice(0,80))} · ${c.asserted_at||'?'}</div>
+    </div>`;
+  };
+
+  // Sources table
+  const srcRows = sources.map(s => {
+    const lang = langLabel(s.language);
+    const date = s.published_at ? s.published_at.slice(0,7) : '<span style="color:#94a3b8">не указана</span>';
+    const trust = s.trust_level || 'unknown';
+    const stype = sourceTypeLabel(s.source_type);
+    return `<tr>
+      <td><a class="src-link" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" title="${esc(s.title_original)}">${esc(s.title_original.slice(0,55))}${s.title_original.length>55?'…':''}</a></td>
+      <td>${stype}</td>
+      <td style="text-align:center">${lang}</td>
+      <td>${date}</td>
+      <td class="${TRUST_CLASS[trust]||'trust-unknown'}" title="${esc(s.trust_reason||'')}">
+        ${trustLabel(trust)}</td>
+    </tr>`;
+  }).join('');
+
+  const missingHTML = missing.length
+    ? `<div class="missing-list">${missing.map(f=>`<span class="missing-tag">✗ ${featureLabel(f)}</span>`).join('')}</div>`
+    : '';
+
+  const descHTML = p2.short_description
+    ? `<div class="detail-section"><h3>Описание</h3><p style="font-size:13px;color:#334155">${esc(p2.short_description.slice(0,400))}${p2.short_description.length>400?'…':''}</p></div>`
+    : '';
+
+  return `
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">
+      <span class="decision-badge ${DECISION_CLASS[dec]||'badge-review'}" style="font-size:12px">${decisionLabel(dec)}</span>
+      <div style="font-size:13px;color:#475569">${reasonLabel(reason)||reason}</div>
+    </div>
+
+    <div style="margin-bottom:12px">
+      ${scoreBarHTML(score, dec)}
+      <div style="font-size:11px;color:#94a3b8;margin-top:3px">${scoreNote}</div>
+    </div>
+
+    ${descHTML}
+
+    <div class="detail-section">
+      <h3>Признаки</h3>
+      <div class="flags-row" style="margin-bottom:6px">
+        ${Object.entries(flags).map(([f,v])=>`<span class="flag ${v?'flag-yes':'flag-no'}">${v?'✓':'✗'} ${featureLabel(f)}</span>`).join('')}
+      </div>
+      ${missingHTML ? `<div style="font-size:12px;color:#9a3412;margin-top:4px">Недостающие: ${missingHTML}</div>` : ''}
+    </div>
+
+    ${posClaims.length ? `<div class="detail-section"><h3>Доказательства отбора</h3>${posClaims.map(c=>renderClaim(c,false)).join('')}</div>` : ''}
+    ${negClaims.length ? `<div class="detail-section"><h3>Признаки исключения</h3>${negClaims.map(c=>renderClaim(c,true)).join('')}</div>` : ''}
+
+    ${sources.length ? `<div class="detail-section"><h3>Источники</h3>
+      <table class="sources-table">
+        <thead><tr><th>Источник</th><th>Тип</th><th>Яз.</th><th>Дата</th><th>Доверие</th></tr></thead>
+        <tbody>${srcRows}</tbody>
+      </table>
+    </div>` : ''}`;
+}
+
+function showDetail(cand, assessment) {
+  selectedCandId = cand.candidate_id;
+  document.querySelectorAll('.cand-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.cid === selectedCandId);
+  });
+  const panel = el('detail-panel');
+  const wrap = el('detail-panel-wrap');
+  panel.innerHTML = `<section style="margin:0;border:1px solid #bfdbfe">
+    <h2 style="margin-top:0;font-size:15px">${esc(cand.name_ru || cand.candidate_id)}</h2>
+    ${renderDetail(cand, assessment)}
+  </section>`;
+  wrap.style.display = 'block';
+  panel.style.display = 'block';
+}
+
+// ── Load run results ─────────────────────────────────────────────────────────
+async function loadRunResults(runId) {
+  currentRunId = runId;
+  el('results-panel').style.display = 'block';
+  el('cand-list').innerHTML = '<div class="empty-state"><div class="icon">⏳</div>Загрузка...</div>';
+  el('detail-panel').style.display = 'none';
+  el('detail-panel-wrap').style.display = 'none';
+
+  try {
+    const [auto, detInput, summary] = await Promise.all([
+      fetch(`/runs/${runId}/automatic.json`).then(r => r.ok ? r.json() : null),
+      fetch(`/runs/${runId}/detector_input.json`).then(r => r.ok ? r.json() : null),
+      fetch(`/runs/${runId}/summary.json`).then(r => r.ok ? r.json() : null)
+    ]);
+
+    const query = summary?.query || '';
+    const asOf = auto?.as_of || summary?.as_of || '';
+    el('results-title').textContent = 'Результаты поиска';
+    el('results-query').textContent = `Запрос: «${query}»${asOf?' · по состоянию на ' + asOf:''}`;
+
+    const reportLink = el('report-link');
+    reportLink.style.display = 'inline-flex';
+    reportLink.href = `/runs/${runId}/report.html`;
+
+    const assessments = auto?.assessments || [];
+    const candidates = detInput?.candidates || [];
+    const counts = auto?.counts || {};
+
+    currentCandidates = candidates;
+    currentAssessments = assessments;
+
+    // Stats
+    const chips = el('stat-chips');
+    chips.innerHTML = '';
+    const total = candidates.length;
+    if (total) chips.innerHTML += `<span class="chip chip-count">📋 Кандидатов: ${total}</span>`;
+    if (counts.likely_weak) chips.innerHTML += `<span class="chip chip-weak">✅ Слабых сигналов: ${counts.likely_weak}</span>`;
+    if (counts.needs_review) chips.innerHTML += `<span class="chip chip-review">⚠️ Нужна проверка: ${counts.needs_review}</span>`;
+    if (counts.likely_mature) chips.innerHTML += `<span class="chip chip-mature">❌ Зрелых: ${counts.likely_mature}</span>`;
+    const srcCount = summary?.retrieved_documents || summary?.documents_found || 0;
+    if (srcCount) chips.innerHTML += `<span class="chip chip-count">🔗 Источников: ${srcCount}</span>`;
+
+    // Errors
+    const errors = summary?.errors || [];
+    const errDiv = el('results-error');
+    if (errors.length) {
+      errDiv.style.display = 'block';
+      errDiv.innerHTML = `<div class="alert alert-warn">Частичные ошибки источников: ${errors.map(e=>esc(JSON.stringify(e))).join(', ')}</div>`;
+    } else {
+      errDiv.style.display = 'none';
+    }
+
+    if (!candidates.length && !assessments.length) {
+      el('cand-list').innerHTML = '<div class="empty-state"><div class="icon">🔍</div>Кандидаты не найдены. Попробуйте другой запрос или расширьте временное окно.</div>';
+      return;
+    }
+
+    // Build assessment map
+    const amap = {};
+    assessments.forEach(a => { amap[a.candidate_id] = a; });
+
+    // Sort: likely_weak first, then by score desc
+    const ORDER = {likely_weak:0, needs_review:1, likely_mature:2};
+    const sorted = [...candidates].sort((a, b) => {
+      const da = amap[a.candidate_id]?.decision || 'needs_review';
+      const db = amap[b.candidate_id]?.decision || 'needs_review';
+      if (ORDER[da] !== ORDER[db]) return ORDER[da] - ORDER[db];
+      return (amap[b.candidate_id]?.score||0) - (amap[a.candidate_id]?.score||0);
+    });
+
+    if (!sorted.length) {
+      el('cand-list').innerHTML = '<div class="empty-state"><div class="icon">📭</div>Кандидаты не получили оценку. Проверьте connector_input.</div>';
+      return;
+    }
+
+    // Render
+    const allNeedsReview = sorted.every(c => (amap[c.candidate_id]?.decision || 'needs_review') === 'needs_review');
+    if (allNeedsReview && sorted.length > 0) {
+      el('cand-list').innerHTML = `<div class="alert alert-warn">Все кандидаты получили статус «Нужна проверка» — автоматического подтверждения доказательств недостаточно. Используйте форму ручной проверки цитат ниже.</div>`;
+    } else {
+      el('cand-list').innerHTML = '';
+    }
+
+    const list = el('cand-list');
+    sorted.forEach((c, i) => {
+      list.appendChild(renderCandidateItem(c, amap[c.candidate_id], i));
+    });
+
+    if (allNeedsReview) {
+      el('cand-list').insertAdjacentHTML('afterbegin', `<div class="alert alert-warn" style="margin-bottom:8px">Все кандидаты требуют экспертной проверки доказательств. Используйте кнопку «Проверить цитаты».</div>`);
+    }
+
+  } catch(e) {
+    el('cand-list').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>Ошибка загрузки результатов: ${esc(e.message)}</div>`;
+  }
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+async function refreshHistory() {
+  try {
+    const runs = await api('/api/runs');
+    const list = el('runs-list');
+    list.innerHTML = '';
+    if (!runs.length) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">🔍</div>Запусков пока нет</div>';
+      return;
+    }
+    runs.forEach(r => {
+      const div = document.createElement('div');
+      div.className = 'run-card' + (r.run_id === currentRunId ? ' active' : '');
+      const sum = r.summary || {};
+      const statusLabel = {done:'Готово', queued:'В очереди', running:'Выполняется', failed:'Ошибка'}[r.status] || r.status;
+      const statusCls = {done:'status-done', queued:'status-running', running:'status-running', failed:'status-failed'}[r.status] || '';
+      const autoC = sum.automatic_counts || {};
+      let stats = '';
+      if (r.status === 'done') {
+        const w = autoC.likely_weak||0, m = autoC.likely_mature||0, nr = autoC.needs_review||0;
+        stats = `<span class="chip chip-count" style="margin-right:4px">📋 ${sum.candidates||0}</span>`;
+        if (w) stats += `<span class="chip chip-weak">✅ ${w}</span> `;
+        if (nr) stats += `<span class="chip chip-review">⚠️ ${nr}</span> `;
+        if (m) stats += `<span class="chip chip-mature">❌ ${m}</span>`;
+      }
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div>
+            <strong style="font-size:14px">${esc(sum.query || r.query || r.run_id)}</strong>
+            <div class="run-meta">
+              <span class="run-status ${statusCls}">${statusLabel}</span>
+              ${r.status === 'done' ? stats : (r.error ? `<span style="font-size:12px;color:#dc2626">${esc(r.error)}</span>` : '')}
+            </div>
+          </div>
+          ${r.status === 'done' ? `<div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="btn btn-secondary btn-sm js-view" data-rid="${r.run_id}">Результаты</button>
+            <button class="btn btn-secondary btn-sm js-review" data-rid="${r.run_id}">Цитаты</button>
+            <a class="btn btn-secondary btn-sm" href="/runs/${r.run_id}/report.html" target="_blank" rel="noopener">Отчёт</a>
+          </div>` : ''}
+        </div>`;
+      list.appendChild(div);
+    });
+    list.querySelectorAll('.js-view').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation(); loadRunResults(b.dataset.rid);
+      document.querySelectorAll('.run-card').forEach(c=>c.classList.remove('active'));
+      b.closest('.run-card').classList.add('active');
+      el('results-panel').scrollIntoView({behavior:'smooth'});
+    }));
+    list.querySelectorAll('.js-review').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation(); loadReviewForm(b.dataset.rid);
+    }));
+  } catch(e) { showMsg('Ошибка загрузки истории: ' + e.message); }
+}
+
+// ── Search submit ─────────────────────────────────────────────────────────────
+el('search-btn').addEventListener('click', async () => {
+  const query = el('query').value.trim();
+  const sq = el('search-query').value.trim();
+  const asOf = el('as-of').value;
+  if (!query || query.length < 3) { showMsg('Введите тему (не менее 3 символов)'); return; }
+  if (!asOf) { showMsg('Укажите дату'); return; }
+  el('search-btn').disabled = true;
+  el('search-btn').textContent = 'Поиск…';
+  showMsg('');
+  try {
+    await api('/api/search', {query, search_query: sq, as_of: asOf});
+    showMsg('Поиск запущен. Результат появится в истории.', 'ok');
+    await refreshHistory();
+  } catch(e) {
+    showMsg('Ошибка: ' + e.message);
+  } finally {
+    el('search-btn').disabled = false;
+    el('search-btn').textContent = 'Найти кандидатов';
+  }
+});
+
+// ── Review form ───────────────────────────────────────────────────────────────
+let revCandidates = [], revRunId = null;
+
+async function loadReviewForm(runId) {
+  try {
+    const data = await api(`/runs/${runId}/detector_input.json`);
+    revRunId = runId; revCandidates = data.candidates || [];
+    const sel = el('rev-candidate'); sel.innerHTML = '';
+    revCandidates.forEach((c,i)=>{
+      const o = document.createElement('option'); o.value=i; o.textContent=c.name_ru||c.candidate_id; sel.append(o);
+    });
+    el('review-section').style.display = revCandidates.length ? 'block' : 'none';
+    if (!revCandidates.length) { showMsg('Нет кандидатов для проверки'); return; }
+    showRevCandidate();
+    el('review-section').scrollIntoView({behavior:'smooth'});
+  } catch(e) { showMsg('Ошибка загрузки: ' + e.message); }
+}
+
+function showRevCandidate() {
+  const c = revCandidates[el('rev-candidate').value];
+  if (!c) return;
+  const sel = el('rev-evidence'); sel.innerHTML = '';
+  (c.extracted_evidence_pending||[]).forEach((e,i)=>{
+    const o = document.createElement('option'); o.value=i; o.textContent=e.quote.slice(0,120); sel.append(o);
+  });
+  const srcs = el('rev-sources'); srcs.innerHTML = '';
+  (c.sources||[]).forEach(s => {
+    const d = document.createElement('details');
+    d.innerHTML = `<summary>${esc(s.title_original)} — ${s.published_at||'дата неизвестна'}</summary>
+      <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:#2563eb">Открыть первоисточник ↗</a>
+      <pre>${esc(s.text||'')}</pre>`;
+    srcs.append(d);
+  });
+  showRevQuote();
+}
+
+function showRevQuote() {
+  const c = revCandidates[el('rev-candidate').value];
+  const e = c?.extracted_evidence_pending?.[el('rev-evidence').value];
+  el('rev-quote').textContent = e?.quote || 'Цитаты не извлечены — необходима дополнительная обработка источника.';
+  el('rev-confirmed').checked = false;
+  el('rev-rationale').value = '';
+  el('rev-observed').value = '';
+}
+
+el('rev-candidate').addEventListener('change', showRevCandidate);
+el('rev-evidence').addEventListener('change', showRevQuote);
+
+el('review-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const c = revCandidates[el('rev-candidate').value];
+  const e = c?.extracted_evidence_pending?.[el('rev-evidence').value];
+  if (!e) { showMsg('Нет цитаты для проверки'); return; }
+  try {
+    const r = {
+      candidate_id: c.candidate_id, evidence_id: e.evidence_id,
+      feature: el('rev-feature').value, reviewer: el('rev-reviewer').value,
+      rationale: el('rev-rationale').value, reviewed: el('rev-confirmed').checked,
+      scope_matches_candidate: el('rev-confirmed').checked,
+      event_status: 'observed', observed_at: el('rev-observed').value, query: c.query
+    };
+    const result = await api('/api/review', {run_id: revRunId, reviews: [r]});
+    showMsg('Проверка сохранена. Создана новая версия результата.', 'ok');
+    await refreshHistory();
+    if (result.run_id) loadReviewForm(result.run_id);
+  } catch(e) { showMsg('Ошибка: ' + e.message); }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(function init() {
+  const today = new Date();
+  el('as-of').value = today.toISOString().slice(0,10);
+  refreshHistory();
+  setInterval(refreshHistory, 5000);
+})();
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</html>

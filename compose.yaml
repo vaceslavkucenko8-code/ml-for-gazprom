@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: signals
+      POSTGRES_USER: signals
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-demo-password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U signals -d signals"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:${APP_PORT:-8766}:8765"
+    environment:
+      DATABASE_URL: postgresql://signals:${POSTGRES_PASSWORD:-local-demo-password}@db:5432/signals
+    volumes:
+      - ./runs:/app/runs
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  postgres-data:

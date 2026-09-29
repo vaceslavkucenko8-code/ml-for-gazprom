@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+runs/.jobs/
+models/translation-en-ru/model/model.bin
+.DS_Store
+Thumbs.db

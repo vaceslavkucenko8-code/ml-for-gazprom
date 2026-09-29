@@ -1,0 +1,20 @@
+openpyxl>=3.1,<4
+scikit-learn==1.9.1
+
+# Retrieval / extraction (participant 2)
+requests>=2.31
+pydantic>=2.6
+beautifulsoup4>=4.12
+lxml>=5.0
+python-dateutil>=2.9
+rapidfuzz>=3.6
+py3langid>=0.2
+pytest>=8.0
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+psycopg[binary]>=3.2,<4
+httpx>=0.27,<1
+
+# Local display translation (original evidence remains unchanged)
+ctranslate2==4.8.2
+sentencepiece==0.2.2
