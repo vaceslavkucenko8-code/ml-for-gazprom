@@ -156,6 +156,24 @@ def analyse(candidate, as_of, search_query=None):
     return result
 
 
+def preliminary_candidates(assessments, exclude_ids=(), limit=15):
+    """Candidates that can fill free TOP-15 slots, clearly marked as preliminary.
+
+    The strict decision rule is unchanged: these stay ``needs_review``. A candidate
+    qualifies only with an explicit early-stage claim on a source matching the query,
+    and no conflicting or maturity claims. Explicit limited adoption was not found.
+    """
+    if limit<=0:
+        return []
+    exclude=set(exclude_ids)
+    pool=[a for a in assessments
+          if a['candidate_id'] not in exclude and a['decision']=='needs_review'
+          and a.get('reason')=='insufficient_explicit_evidence'
+          and a.get('flags',{}).get('early_stage') and a.get('flags',{}).get('relevance')
+          and not a['flags'].get('mass_adoption') and not a['flags'].get('industry_standard')]
+    return sorted(pool,key=lambda a:(-a['score'],a['candidate_id']))[:limit]
+
+
 def assess_automatically(candidates,as_of,search_query=None):
     results=[analyse(c,as_of,search_query) for c in candidates]
     return {'as_of':as_of,'model_version':VERSION,'assessments':results,

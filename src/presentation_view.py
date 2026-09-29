@@ -145,7 +145,13 @@ def load_view(folder, *, translate_cards=True, candidate_id=None):
 
     ids={c['candidate_id'] for c in cards}
     top=list(dict.fromkeys(r['candidate_id'] for r in result['results'] if r['candidate_id'] in ids))[:15]
+    # Free TOP-15 slots are filled with explicitly marked preliminary candidates;
+    # the strict automatic decision of every candidate stays unchanged.
+    from .automatic import preliminary_candidates
+    preliminary=[a['candidate_id'] for a in preliminary_candidates(auto['assessments'],top,15-len(top))
+                 if a['candidate_id'] in ids] if candidate_id is None else []
     return {'query':summary['query'],'as_of':summary['as_of'],'cards':cards,'top_ids':top,
+        'preliminary_ids':preliminary,
         'summary':summary,'excluded_documents':[{**d,'url':safe_url(d.get('url')),'reason_ru':reason(d['reason'])}
                                                for d in summary.get('excluded_documents',[])],
         'model_version':auto.get('model_version'),'ranking_model':auto.get('ranking_model'),
